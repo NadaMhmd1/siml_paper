@@ -1,5 +1,5 @@
 from simulations import run_simulations
-from MLreg import *
+from reg_model import *
 
 
 def main():
