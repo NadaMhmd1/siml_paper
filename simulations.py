@@ -2,7 +2,7 @@ import pandas as pd
 import random
 from gillespy2.core import Model, Species, Reaction, Parameter
 from gillespy2 import ODESolver
-from data_preparation import *
+from sim_data_preparation import *
 
 def run_simulations(max_runs=300):
     for i in range(1, max_runs + 1):
