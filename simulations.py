@@ -2,12 +2,12 @@ import pandas as pd
 import random
 from gillespy2.core import Model, Species, Reaction, Parameter
 from gillespy2 import ODESolver
-from sim_data_preparation import *
+from sim_data_preparation import get_rates_to_list, get_concentrations_to_list, get_edges_to_list
 
 def run_simulations(max_runs=300):
     for i in range(1, max_runs + 1):
         run_sim(i)
-        print(i)
+        print(f"Simulation {i} completed.")
     print('Simulation runs completed.')
 
 def run_sim(i):
@@ -25,7 +25,7 @@ def run_sim(i):
             self.add_parameter(parameters)
             species_list = [Species(name=spec[0], initial_value=spec[1], mode='continuous', allow_negative_populations=True) for spec in species]
             self.add_species(species_list)
-            reactions = get_edges_to_list(link1, link2)
+            reactions = get_edges_to_list(link_new_g1, link_new_g2)
             reaction_list = [Reaction(name=r[0], reactants=r[1], products=r[2], rate=r[3]) for r in reactions]
             self.add_reaction(reaction_list)
             self.timespan(np.linspace(0, 100, 101))
@@ -38,4 +38,4 @@ def run_sim(i):
     final_results_df = pd.DataFrame.from_dict(results_dict)
     final_results_df = final_results_df.loc[:, (final_results_df != 0).any(axis=0)].drop(columns=['time'])
     print('Results saved.')
-    final_results_df.to_csv('.../results/SIM/results{}.csv'.format(i))
+    final_results_df.to_csv('.../results/SIM/results{i}.csv')
