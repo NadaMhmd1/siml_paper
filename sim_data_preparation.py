@@ -1,51 +1,63 @@
 import pandas as pd
 import random
 
-links_df = pd.read_csv('.../data/edges_list', index_col=0, sep=',')
-source_df = pd.read_csv('.../data/source_list.csv', index_col=0, sep=',')
-source = list(source_df.index)
+# Constants
+EDGES_DATA_PATH = '.../data/edges_list'
+SOURCE_DATA_PATH = '.../data/source_list.csv'
+RANDOM_RATES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+CONCENTRATION_RANGE = list(range(10, 100))
 
-random_rate = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-random_concentration = list(range(10, 100))
+# Read data
+edges_df = pd.read_csv(EDGES_DATA_PATH, index_col=0, sep=',')
+source_df = pd.read_csv(SOURCE_DATA_PATH, index_col=0, sep=',')
 
-link_new_g1 = list(links_df['0'])
-link_new_g2 = list(links_df['1'])
-group_targets_done = links_df.groupby('0')
-link1, link2 = [], []
+# Extract source genes
+source_genes = list(source_df.index)
 
-for group_key, group_data in group_targets_done:
-    link1.append(group_key)
-    link2.append(list(group_data['1']))
+# Extract link information
+links_from = list(edges_df['0'])
+links_to = list(edges_df['1'])
+grouped_targets = edges_df.groupby('0')
+targets_from, targets_to = [], []
 
-all_genes = list(set(links_df['0']) | set(links_df['1']))
+# Group links
+for group_key, group_data in grouped_targets:
+    targets_from.append(group_key)
+    targets_to.append(list(group_data['1']))
 
-def get_rates_to_list(genes):
+# All genes in the network
+all_genes = list(set(edges_df['0']) | set(edges_df['1']))
+
+# Generate random rates for genes
+def generate_random_rates(genes):
     rates = []
     for gene in genes:
-        rates.append(random.choice(random_rate))
-    return [('rate{}'.format(i), rate) for i, rate in enumerate(rates)]
+        rates.append(random.choice(RANDOM_RATES))
+    return [(f'rate{i}', rate) for i, rate in enumerate(rates)]
 
-def get_concentrations_to_list(genes, source_genes):
+# Generate random concentrations for genes
+def generate_random_concentrations(genes, source_genes):
     non_source_genes = [x for x in genes if x not in source_genes]
     num_non_source_genes = len(non_source_genes)
     zero_concentration = [0.0] * num_non_source_genes
     random_num_sources = random.randint(1, min(5, len(source_genes)))
     random_sources = random.sample(source_genes, random_num_sources)
-    source_concentration = random.choices(random_concentration, k=random_num_sources)
+    source_concentration = random.choices(CONCENTRATION_RANGE, k=random_num_sources)
     leftover_sources = [x for x in source_genes if x not in random_sources]
     zero_leftover = [0.0] * len(leftover_sources)
     gene_list = non_source_genes + random_sources + leftover_sources
     concentration_list = zero_concentration + source_concentration + zero_leftover
     return list(zip(gene_list, concentration_list))
 
-def get_edges_to_list(g1, g2):
+# Generate edges
+def generate_edges(from_genes, to_genes):
     edges = []
-    for i in range(len(g1)):
+    for i in range(len(from_genes)):
         try:
-            link_name = g1[i] + 'link'
-            relation_in = {globals()[g1[i]]: 1}
-            relation_out = {globals()[j]: 1 for j in g2[i]}
-            temp_rate = globals()['rate{}'.format(i)]
+            link_name = f'{from_genes[i]}link'
+            relation_in = {globals()[from_genes[i]]: 1}
+            relation_out = {globals()[j]: 1 for j in to_genes[i]}
+            temp_rate = globals()[f'rate{i}']
             edges.append([link_name, relation_in, relation_out, temp_rate])
         except IndexError:
             continue
